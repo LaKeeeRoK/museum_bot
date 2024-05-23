@@ -94,5 +94,10 @@ def callback_query(call):
         logging.error(f'Ошибка в обработчике callback_query: {e}')
 
 
-# Запуск бота
-bot.polling()
+# Запуск бота с обработкой исключений
+while True:
+    try:
+        bot.polling(none_stop=True)
+    except Exception as e:
+        logging.error(f'Ошибка в polling: {e}')
+        time.sleep(10)  # Добавляем задержку перед повторным запуском
