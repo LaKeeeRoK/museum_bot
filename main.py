@@ -25,11 +25,14 @@ user_choices = {}
 
 # Функция для отправки клавиатуры с кнопками для текущего шага
 def send_keyboard(chat_id, step):
-    global text
-    keyboard = types.InlineKeyboardMarkup()
-    buttons = [types.InlineKeyboardButton(text=btn, callback_data=btn) for btn in steps[step]]
-    keyboard.add(*buttons)
-    bot.send_message(chat_id, text[step], reply_markup=keyboard)
+    try:
+        keyboard = types.InlineKeyboardMarkup()
+        buttons = [types.InlineKeyboardButton(text=btn, callback_data=f'step{step}:{btn}') for btn in steps[step]]
+        keyboard.add(*buttons)
+        bot.send_message(chat_id, texts[step], reply_markup=keyboard)
+    except Exception as e:
+        logging.error(f'Ошибка при отправке клавиатуры: {e}')
+data_users = {}
 
 
 # Обработчик команды /start
