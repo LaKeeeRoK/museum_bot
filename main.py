@@ -1,5 +1,9 @@
 import telebot
 from telebot import types
+import time
+import logging
+import csv
+
 
 # Установите токен вашего бота
 TOKEN = '7036666957:AAGq0yvxuIQJUGixBK4S4gQTY0CbsFlf6KU'
