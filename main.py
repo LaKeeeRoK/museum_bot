@@ -61,20 +61,37 @@ def get_museum(user_choices, user_id=0):
 # Обработчик нажатий на кнопки
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    bot.answer_callback_query(call.id)
-    chat_id = call.message.chat.id
-    user_choice = call.data
-    if chat_id not in user_choices:
-        user_choices[chat_id] = []
-    user_choices[chat_id].append(user_choice)
+    try:
+        bot.answer_callback_query(call.id)
+        chat_id = call.message.chat.id
+        if ':' not in call.data:
+            logging.warning(f'Неправильный формат данных в callback_query: {call.data}')
+            return
 
-    if user_choice in steps[1]:
-        send_keyboard(chat_id, 2)
-    elif user_choice in steps[2]:
-        send_keyboard(chat_id, 3)
-    else:
-        bot.send_message(chat_id, f'Вы выбрали комбинацию: {", ".join(user_choices[chat_id])}')
-        del user_choices[chat_id]  # Удаляем запись о выборе пользователя
+        step, user_choice = call.data.split(':')
+
+        if chat_id not in user_choices:
+            user_choices[chat_id] = []
+        user_choices[chat_id].append(user_choice)
+        data_users[chat_id] = [], []
+
+        if step == 'step1':
+            send_keyboard(chat_id, 2)
+        elif step == 'step2':
+            send_keyboard(chat_id, 3)
+        elif step == 'step3':
+            data_users[chat_id] = get_museum(user_choices[chat_id])
+            if len(data_users[chat_id][0]) > 0:
+                for i in range(len(data_users[chat_id][0])):
+                    response = f'Мы рекомендуем вам посетить {data_users[chat_id][0][i]}, {data_users[chat_id][1][i]}.'
+                    bot.send_message(chat_id, response)
+            else:
+                bot.send_message(chat_id, 'К сожалению, подходящих музеев не найдено. Отправьте еще раз /start')
+
+            del user_choices[chat_id]  # Удаляем запись о выборе пользователя
+            del data_users[chat_id]
+    except Exception as e:
+        logging.error(f'Ошибка в обработчике callback_query: {e}')
 
 
 # Запуск бота
