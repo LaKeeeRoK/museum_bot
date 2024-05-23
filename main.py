@@ -42,6 +42,18 @@ def start_message(message):
     bot.send_message(message.chat.id, "Привет, Я Бот помошник с выбором музея. ")
     send_keyboard(message.chat.id, 1)
 
+# Функция для выбора музея из базы данных
+def get_museum(user_choices, user_id=0):
+    name = []
+    link = []
+    location, interest, price_range = user_choices
+    with open('muzei.csv', 'r',encoding='utf-8', errors='ignore') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=';')
+        for row in csvreader:
+            if row[1] == interest and row[2] == price_range and row[4] == location:
+                name.append(row[0])
+                link.append(row[-1])
+    return name, link
 
 # Обработчик нажатий на кнопки
 @bot.callback_query_handler(func=lambda call: True)
