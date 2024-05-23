@@ -38,9 +38,12 @@ data_users = {}
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    user_choices[message.chat.id] = []
-    bot.send_message(message.chat.id, "Привет, Я Бот помошник с выбором музея. ")
-    send_keyboard(message.chat.id, 1)
+    try:
+        user_choices[message.chat.id] = []
+        bot.send_message(message.chat.id, "Привет! Я бот-помощник с выбором музея.")
+        send_keyboard(message.chat.id, 1)
+    except Exception as e:
+        logging.error(f'Ошибка в обработчике команды /start: {e}')
 
 # Функция для выбора музея из базы данных
 def get_museum(user_choices, user_id=0):
