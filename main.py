@@ -2,11 +2,14 @@ import telebot
 from telebot import types
 import time
 import logging
+import sqlite3
 import csv
-
 
 # Установите токен вашего бота
 TOKEN = '7036666957:AAGq0yvxuIQJUGixBK4S4gQTY0CbsFlf6KU'
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
 
 # Создание объекта бота
 bot = telebot.TeleBot(TOKEN)
@@ -15,7 +18,7 @@ bot = telebot.TeleBot(TOKEN)
 steps = {
     1: ['Центр', 'Север', 'Запад', 'Юг', 'Восток'],
     2: ['История', 'Архитектура', 'Искусство', 'Литература', 'Музыка', 'Наука и техника', 'Природа', 'Этнография'],
-    3: ["До 200 рублей", "200-450 рублей", '450+ рублей'] 
+    3: ["до 200 рублей", "200-450 рублей", '450+ рублей'] 
     }
 texts = {
     1: "Выберите примерное местоположение:",
@@ -25,7 +28,6 @@ texts = {
 
 # Словарь для хранения выбранных пользователем кнопок
 user_choices = {}
-
 
 # Функция для отправки клавиатуры с кнопками для текущего шага
 def send_keyboard(chat_id, step):
@@ -38,6 +40,20 @@ def send_keyboard(chat_id, step):
         logging.error(f'Ошибка при отправке клавиатуры: {e}')
 data_users = {}
 
+# Функция для выбора музея из базы данных
+def get_museum(user_choices, user_id=0):
+    name = []
+    link = []
+    location, interest = user_choices
+    with open('muzei.csv', 'r',encoding='utf-8', errors='ignore') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=';')
+        for row in csvreader:
+            if row[1] == interest and row[4] == location:
+                name.append(row[0])
+                link.append(row[-1])
+    return name, link
+
+
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
@@ -48,19 +64,6 @@ def start_message(message):
         send_keyboard(message.chat.id, 1)
     except Exception as e:
         logging.error(f'Ошибка в обработчике команды /start: {e}')
-
-# Функция для выбора музея из базы данных
-def get_museum(user_choices, user_id=0):
-    name = []
-    link = []
-    location, interest, price_range = user_choices
-    with open('muzei.csv', 'r',encoding='utf-8', errors='ignore') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter=';')
-        for row in csvreader:
-            if row[1] == interest and row[2] == price_range and row[4] == location:
-                name.append(row[0])
-                link.append(row[-1])
-    return name, link
 
 # Обработчик нажатий на кнопки
 @bot.callback_query_handler(func=lambda call: True)
@@ -82,21 +85,23 @@ def callback_query(call):
         if step == 'step1':
             send_keyboard(chat_id, 2)
         elif step == 'step2':
-            send_keyboard(chat_id, 3)
-        elif step == 'step3':
             data_users[chat_id] = get_museum(user_choices[chat_id])
             if len(data_users[chat_id][0]) > 0:
+                response = ""
                 for i in range(len(data_users[chat_id][0])):
-                    response = f'Мы рекомендуем вам посетить {data_users[chat_id][0][i]}, {data_users[chat_id][1][i]}.'
-                    bot.send_message(chat_id, response)
+                    response += f'Мы рекомендуем вам посетить {data_users[chat_id][0][i]}, {data_users[chat_id][1][i]}\n\n'
+
+                bot.send_message(chat_id, response)
+
+                bot.send_message(chat_id, "Для повторного использования отправь мне команду /start")
             else:
                 bot.send_message(chat_id, 'К сожалению, подходящих музеев не найдено. Отправьте еще раз /start')
+
 
             del user_choices[chat_id]  # Удаляем запись о выборе пользователя
             del data_users[chat_id]
     except Exception as e:
         logging.error(f'Ошибка в обработчике callback_query: {e}')
-
 
 # Запуск бота с обработкой исключений
 while True:
