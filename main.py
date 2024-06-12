@@ -15,10 +15,11 @@ logging.basicConfig(level=logging.INFO)
 # Создание объекта бота
 bot = telebot.TeleBot(TOKEN)
 
-# Словарь с шагами и кнопками
+# Словари с шагами и кнопками
 steps = {
     1: ['Центр', 'Север', 'Запад', 'Юг', 'Восток'],
-    2: ['История', 'Архитектура', 'Искусство', 'Литература', 'Музыка', 'Наука и техника', 'Природа', 'Этнография'],
+    2: ['История', 'Архитектура', 'Искусство', 'Литература', 
+        'Музыка', 'Наука и техника', 'Природа', 'Этнография'],
     3: ["до 200 рублей", "200-450 рублей", '450+ рублей'] 
     }
 texts = {
@@ -34,7 +35,8 @@ user_choices = {}
 def send_keyboard(chat_id, step):
     try:
         keyboard = types.InlineKeyboardMarkup()
-        buttons = [types.InlineKeyboardButton(text=btn, callback_data=f'step{step}:{btn}') for btn in steps[step]]
+        buttons = [types.InlineKeyboardButton(text=btn, 
+                                              callback_data=f'step{step}:{btn}') for btn in steps[step]]
         keyboard.add(*buttons)
         bot.send_message(chat_id, texts[step], reply_markup=keyboard)
     except Exception as e:
@@ -53,8 +55,6 @@ def get_museum(user_choices, user_id=0):
                 name.append(row[0])
                 link.append(row[-1])
     return name, link
-
-
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
@@ -90,7 +90,8 @@ def callback_query(call):
             if len(data_users[chat_id][0]) > 0:
                 response = ""
                 for i in range(len(data_users[chat_id][0])):
-                    response += f'Мы рекомендуем вам посетить {data_users[chat_id][0][i]}, {data_users[chat_id][1][i]}\n\n'
+                    response += f'Мы рекомендуем вам посетить {data_users[chat_id][0][i]}, 
+                                {data_users[chat_id][1][i]}\n\n'
 
                 bot.send_message(chat_id, response)
 
